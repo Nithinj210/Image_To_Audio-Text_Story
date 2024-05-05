@@ -4,7 +4,6 @@ import streamlit as st
 import requests
 from transformers import pipeline
 import openai
-import keras
 
 # Suppressing all warnings
 import warnings
@@ -23,26 +22,58 @@ def img2txt(url):
 # Text-to-story
 def txt2story(img_text, top_k, top_p, temperature):
 
+    from Secrete_key import TOGETHER_API_KEY
+    import os
+    import json  # Used for potential logging
+    import requests
+
+    # Set API key environment variable
+    os.environ["TOGETHER_API_KEY"] = TOGETHER_API_KEY
+
+    # Create headers with authorization token
     headers = {"Authorization": f"Bearer {os.environ['TOGETHER_API_KEY']}"}
 
+    # Prepare data for API request
     data = {
         "model": "togethercomputer/llama-2-70b-chat",
         "messages": [
             {"role": "system", "content": '''As an experienced short story writer, write story title and then create a meaningful story influenced by provided words. 
-        Ensure stories conclude positively within 100 words. Remember the story must end within 100 words''', "temperature": temperature},
-            {"role": "user", "content": f"Here is input set of words: {img_text}", "temperature": temperature} 
+            Ensure stories conclude positively within 100 words. Remember the story must end within 100 words''', "temperature": temperature},
+            {"role": "user", "content": f"Here is input set of words: {img_text}", "temperature": temperature}
         ],
         "top_k": top_k,
         "top_p": top_p,
         "temperature": temperature
     }
-    
-    response = requests.post("https://api.together.xyz/inference", headers=headers, json=data)
-    
-    story = response.json()["output"]["choices"][0]["text"] 
+
+    # Send API request and handle potential errors
+    try:
+        response = requests.post("https://api.together.xyz/inference", headers=headers, json=data)
+        response.raise_for_status()  # Raise an exception for non-2xx status codes
+
+        # Extract story text (assuming successful response)
+        story = response.json()["output"]["choices"][0]["text"]
+    except requests.exceptions.RequestException as e:
+        # Handle request errors (e.g., network issues)
+        print(f"Error making API request: {e}")
+        story = None  # Indicate error or return default value
+    except (KeyError, JSONDecodeError) as e:
+        # Handle potential issues with response data
+        print(f"Error processing API response: {e}")
+        story = None  # Indicate error or return default value
+
+    # Optional: Log API request details for debugging
+    # You can uncomment and customize this section if needed
+    # with open("api_requests.log", "a") as f:
+    #     log_data = {"image_text": img_text, "data": data, "response": response.json()}
+    #     json.dump(log_data, f)
+
     return story
 # Text-to-speech
 def txt2speech(text):
+    from Secrete_key2 import HUGGINGFACEHUB_API_TOKEN
+    import os
+    os.environ["HUGGINGFACEHUB_API_TOKEN"] = HUGGINGFACEHUB_API_TOKEN
     print("Initializing text-to-speech conversion...")
     API_URL = "https://api-inference.huggingface.co/models/espnet/kan-bayashi_ljspeech_vits"
     headers = {"Authorization": f"Bearer {os.environ['HUGGINGFACEHUB_API_TOKEN']}"}
