@@ -1,2 +1,3 @@
 # Image_To_Audio-Text_Story
-LLM Based project
+LLM Based project.
+LLM Based project. Streamlit to create a web app that converts images into audio stories and Text Stories. It first extracts text from an uploaded image using a machine learning model, then generates a short story based on this text, and finally converts the story into speech. The app allows for customization of the text generation process through configurable parameters and provides an interactive interface for users to upload images and listen to the generated audio stories. Image-to-Text Model: Model Used: Salesforce/blip-image-captioning-base Text-to-Story Model: Model Used: togethercomputer/llama-2-70b-chat Text-to-Speech Model: Model Used: espnet/kan-bayashi_ljspeech_vits
